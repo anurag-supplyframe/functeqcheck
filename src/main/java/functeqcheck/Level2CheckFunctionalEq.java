@@ -1,6 +1,7 @@
 package functeqcheck;
 
 /*
+ * Checks if the 2 parts(level 2 connected) are fff or not
 hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
 functeqcheck.Level2CheckFunctionalEq \
 -Dmapred.reduce.tasks=10 -Ddfs.replication=1 \

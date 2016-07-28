@@ -24,14 +24,26 @@ import org.apache.hadoop.util.ToolRunner;
 import supplyframe.utils.FieldIntPair;
 
 
-/*
+/*This program checks whether the two parts are fff or not
+ * You can also filter based on category of part
  * 
  * The parameters that have to be passed to the job -Dcategory1 and -Dcategory2
  * 
- * hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar functeqcheck.CheckIfFuncEq \
- * -Dmapred.reduce.tasks=10 -Ddfs.replication=1 -Dcategory1="Microcontrollers and Processors" -Dcategory2="Microcontrollers and Processors" \
- * /prod/partsio/fff/ /user/amishra/related_parts_summary_2015_16/ \
- * /user/amishra/L1reln
+ hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar functeqcheck.CheckIfFuncEq \
+ -Dmapred.reduce.tasks=10 -Ddfs.replication=1 -Dcategory1="Microcontrollers and Processors" -Dcategory2="Microcontrollers and Processors" \
+ /prod/partsio/fff/ /user/amishra/related_parts_summary_2015_16/ \
+ /user/amishra/L1reln
+  * 
+ //Change #1
+hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar functeqcheck.CheckIfFuncEq \
+-Dmapred.reduce.tasks=20 -Ddfs.replication=1 -Dcategory1="Microcontrollers and Processors" -Dcategory2="Microcontrollers and Processors" \
+/user/amishra/fff_pairwise /user/amishra/1year/related_parts_summary_15_16/ \
+/user/amishra/1year/L1reln
+ 
+ */
+
+/*
+ * #1	Map from /user/amishra/fff_pairwise instead of /prod/partsio/fff/
  */
 public class CheckIfFuncEq extends Configured implements Tool {
 
@@ -53,8 +65,12 @@ public class CheckIfFuncEq extends Configured implements Tool {
 	public int run(String[] args) throws Exception {
 		Configuration conf= getConf();
 		
-		//conf.set("mapred.compress.map.output", "true");
-		//conf.set("mapred.map.output.compression.codec",	"org.apache.hadoop.io.compress.SnappyCodec");
+	    conf.set("mapred.compress.map.output", "true");
+		conf.set("mapred.map.output.compression.codec",	"org.apache.hadoop.io.compress.SnappyCodec");
+		
+		conf.set("mapred.output.compress", "true");
+	    conf.set("mapred.output.compression.type", "BLOCK");
+	    conf.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.GzipCodec");
 		
 		//some debug info
 		System.out.println(conf.get("category1", ""));
@@ -65,7 +81,10 @@ public class CheckIfFuncEq extends Configured implements Tool {
 		job.setJarByClass(CheckIfFuncEq.class);
 		job.setJobName("CheckIfFuncEq");
 		
-		MultipleInputs.addInputPath(job, new Path(args[0]), TextInputFormat.class, FFFMapper.class);
+		//Start Change #1
+		//MultipleInputs.addInputPath(job, new Path(args[0]), TextInputFormat.class, FFFMapper.class);
+		MultipleInputs.addInputPath(job, new Path(args[0]), TextInputFormat.class, FFFPartsMapper.class);
+		//End Change #1
 		MultipleInputs.addInputPath(job, new Path(args[1]), TextInputFormat.class, SummaryMapper.class);
 		FileOutputFormat.setOutputPath(job, new Path(args[2]));
 		job.setOutputFormatClass(TextOutputFormat.class);
@@ -92,14 +111,14 @@ public class CheckIfFuncEq extends Configured implements Tool {
 		@Override
 		protected void reduce(FieldIntPair key, Iterable<FieldIntPair> vals,Reducer<FieldIntPair, FieldIntPair, Text, NullWritable>.Context context) throws IOException, InterruptedException {
 
-			String decision = "N", currGroup = "";
+			String decision = "N" /*, currGroup = ""*/; //change #1
 			Iterator<FieldIntPair> itr = vals.iterator();
 			FieldIntPair val = null;
 			while (itr.hasNext()) {
 				val = itr.next();
 				if (val.mark.get() == REF) {
 					decision = "Y";
-					currGroup = val.field.get("group");
+					//currGroup = val.field.get("group"); //Change #1
 				} else {
 					if("Y".equals(decision)){
 						context.getCounter("CheckReducer", "FFF.SearchPart").increment(1);
@@ -163,6 +182,9 @@ public class CheckIfFuncEq extends Configured implements Tool {
 		
 	}
 	
+	/*
+	 * This class reads from the raw fff data 
+	 */
 	public static class FFFMapper extends Mapper<LongWritable, Text, FieldIntPair, FieldIntPair>{
 		
 		private FieldIntPair keyOut = new FieldIntPair( new FieldWritable("part1" + "\t" + "part2"), REF);
@@ -205,5 +227,37 @@ public class CheckIfFuncEq extends Configured implements Tool {
 			
 		}
 	}
+	
+	
+	//Start Change #1
+	/*
+	 * This class reads from fff_pairwise which means we have already created pairs from the raw fff data
+	 */
+	public static class FFFPartsMapper extends Mapper<LongWritable , Text, FieldIntPair , FieldIntPair >{
+		
+		private FieldIntPair keyOut = new FieldIntPair(new FieldWritable(
+					"part1" + "\t" + "part2" 
+		
+					),																	REF);
+		
+		private FieldIntPair valOut = new FieldIntPair(new FieldWritable("dummy"), 		REF);
+		
+		@Override
+		protected void map(LongWritable key, Text value,
+				Mapper<LongWritable, Text, FieldIntPair, FieldIntPair>.Context context)
+				throws IOException, InterruptedException {
+			
+			String[] toks=value.toString().split("\t");
+
+			
+			keyOut.field.set(value);
+			valOut.field.set("Y");
+			context.write(keyOut, valOut);
+		}
+		
+		
+	}
+	//End Change #1
+	
 
 }

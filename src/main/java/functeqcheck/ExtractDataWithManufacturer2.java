@@ -27,6 +27,8 @@ import supplyframe.utils.FieldIntPair;
 
 
 /*
+ * Populate the manufacturer2
+ * 
 hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
 functeqcheck.ExtractDataWithManufacturer2 \
 -Dmapred.reduce.tasks=10 -Ddfs.replication=1 \
@@ -34,6 +36,14 @@ functeqcheck.ExtractDataWithManufacturer2 \
 /user/amishra/partsio_extract \
 /user/amishra/L1reln_extracted_man1 \
 /user/amishra/L1reln_extracted_man2
+ * 
+hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
+functeqcheck.ExtractDataWithManufacturer2 \
+-Dmapred.reduce.tasks=10 -Ddfs.replication=1 \
+-Dth_wt=10000 -Dkey_col=1 \
+/user/amishra/partsio_extract \
+/user/1year/amishra/L1reln_extracted_man1 \
+/user/1year/amishra/L1reln_extracted_man2
 */
 public class ExtractDataWithManufacturer2 extends Configured implements Tool {
 

@@ -19,11 +19,13 @@ import org.apache.hadoop.util.Tool;
 import org.apache.hadoop.util.ToolRunner;
 
 
-/*
-hadoop jar arbitaryutils-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
-arbitaryutils.ExtractData \
--Dmapred.reduce.tasks=10 -Ddfs.replication=1 \
-/user/amishra/L1reln /user/amishra/L1reln_extracted
+/*Remove the category fields as we are working for the scenario where 
+ * both parts belong to the same category 
+ * 
+hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
+functeqcheck.ExtractData \
+-Dmapred.reduce.tasks=20 -Ddfs.replication=1 \
+/user/amishra/1year/L1reln /user/amishra/1year/L1reln_extracted
  * 
  */
 

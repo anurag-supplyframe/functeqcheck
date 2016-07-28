@@ -1,7 +1,9 @@
 package functeqcheck;
 
-//Command to run: 
+ 
 /*
+ * Extract the part_number , category and manufacturer field from the huge partsio file
+ * 
 hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
 functeqcheck.PartIOExtract \
 -Dmapred.reduce.tasks=0 -Ddfs.replication=1 \

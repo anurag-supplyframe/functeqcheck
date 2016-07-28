@@ -25,6 +25,9 @@ import org.apache.hadoop.util.ToolRunner;
 
 
 /*
+ * This job will output pairs of part P1 and P2 which are of same category
+ * and are joined by some part belonging to some other category.
+ * and the weight given is w(P1-P'):w(P2-P')
  * 
 hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar functeqcheck.Level2Relation \
 -Dmapred.reduce.tasks=10 -Ddfs.replication=1 \
@@ -34,8 +37,7 @@ hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar functeqcheck.Le
 
 public class Level2Relation extends Configured implements Tool{
 
-	private static final int REF = 0;
-	private static final int APP = 1;
+
 	
 	
 	public static void main(String[] args)  throws Exception {

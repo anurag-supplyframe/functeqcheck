@@ -14,7 +14,15 @@ import org.apache.hadoop.util.ToolRunner;
 
 
 /*
-hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar functeqcheck.Bz2ToGz  /user/amishra/related_parts_summary_2015_16_bzip2 /user/amishra/related_parts_summary_2015_16_gz
+ * 01. No custom mapper or custom redcuer.
+ *
+ * 
+ * A simple program to convert from bzip2 to gzip
+ * 
+hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
+functeqcheck.Bz2ToGz  \
+/user/amishra/related_parts_summary_2015_16_bzip2 \
+/user/amishra/related_parts_summary_2015_16_gz
 
 */
 
@@ -56,6 +64,7 @@ public class Bz2ToGz extends Configured implements Tool {
 		job.setOutputFormatClass(TextOutputFormat.class);
 
 		job.setMapperClass(Mapper.class);
+		//we have to specify the mapper name even if we are using default mapper
 		
 		
 		FileInputFormat.addInputPath(job, new Path(args[0]));
