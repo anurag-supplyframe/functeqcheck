@@ -8,8 +8,21 @@ hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
 functeqcheck.PartIOExtract \
 -Dmapred.reduce.tasks=0 -Ddfs.replication=1 \
 /user/amishra/partsio_extract
+
+hadoop jar functeqcheck-0.0.1-SNAPSHOT-jar-with-dependencies.jar \
+functeqcheck.PartIOExtract \
+-Dmapred.reduce.tasks=0 -Ddfs.replication=1 \
+/user/amishra/partsio_extract_extended
 */
 
+
+/*
+ * #1. The category which we are referring till now was IHS Class, which is more of a superclass of
+ * Ihs category, we would like to extract the ihs category and sub category as well.
+ * 
+ * 
+ * 
+ */
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.io.InputStream;
@@ -54,10 +67,10 @@ public class PartIOExtract extends Configured implements Tool {
 		
 		conf.set("mapred.output.compress", "true");
 	    conf.set("mapred.output.compression.type", "BLOCK");
-	    conf.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.GzipCodec");
+	    conf.set("mapred.output.compression.codec", "org.apache.hadoop.io.compress.BZip2Codec");
 		
 	    conf.set("mapred.compress.map.output", "true");
-		conf.set("mapred.map.output.compression.codec",	"org.apache.hadoop.io.compress.GzipCodec");
+		conf.set("mapred.map.output.compression.codec",	"org.apache.hadoop.io.compress.BZip2Codec");
 		conf.set("mapred.reduce.tasks", "0");
 		
 		Job  job = new Job(conf);
@@ -84,12 +97,17 @@ public class PartIOExtract extends Configured implements Tool {
 	
 	public static class PartIOExtractMapper extends Mapper<LongWritable, Text, FieldWritable, NullWritable>{
 		
-		private FieldWritable keyOut = new FieldWritable("part_number" + "\t" + "category" + "\t" + "manufacturer");
+		private FieldWritable keyOut = new FieldWritable(
+						"part_number" + "\t" + 
+						"ihs_class" + "\t" + 
+						"ihs_category" + "\t" + 
+						"sub_category" + "\t" + 
+						"manufacturer");
 		
 		
-		Integer part_loc = 0, category_loc = 0;
+		Integer part_loc = -1, ihs_class_loc = -1, ihs_category_loc=-1, sub_category_loc=-1 ;
 		
-		Integer IhsManufacturer = 0;
+		Integer IhsManufacturer = -1;
 		
 		@Override
 		public void setup(Context context) throws IOException, InterruptedException{
@@ -121,12 +139,20 @@ public class PartIOExtract extends Configured implements Tool {
 						System.out.println("found part:\t"+i);
 					}
 					if (parts[i].equals("IhsClass")) {
-						category_loc = i;
-						System.out.println("found category:\t"+i);
+						ihs_class_loc = i;
+						System.out.println("found ihs_class:\t"+i);
 					}
 					if(parts[i].equals("Manufacturer")){
 						IhsManufacturer=i;
 						System.out.println("found the manufacturer:\t"+i);
+					}
+					if(parts[i].equals("IhsCategory")){
+						ihs_category_loc=i;
+						System.out.println("found the ihs_category:\t"+i);
+					}
+					if(parts[i].equals("SubCategory")){
+						sub_category_loc=i;
+						System.out.println("found the sub_category:\t"+i);
 					}
 				}
 				
@@ -142,16 +168,26 @@ public class PartIOExtract extends Configured implements Tool {
 			String[] parts = valIn.toString().split("\t");
 				
 			String conform_number = parts[part_loc].replaceAll("[\\s-]", "").replaceAll("</?[^>]+>", "").replace("\"", "");
-			String category = parts[category_loc].replace("\"", "");
-			if("".equals(category) ){
-				category = "#####";
+			String ihs_class = parts[ihs_class_loc].replace("\"", "");
+			if("".equals(ihs_class) ){
+				ihs_class = "#####";
+			}
+			String ihs_category = parts[ihs_category_loc].replace("\"", "");
+			if("".equals(ihs_category) ){
+				ihs_category = "#####";
+			}
+			String sub_category = parts[sub_category_loc].replace("\"", "");
+			if("".equals(sub_category) ){
+				sub_category = "#####";
 			}
 			String manufacturer = parts[IhsManufacturer].replace("\"", "");
 			if("".equals(manufacturer) ){
 				manufacturer = "#####";
 			}
 			keyOut.set(conform_number.toUpperCase().trim() + "\t" +
-					category+ "\t" +
+					ihs_class+ "\t" +
+					ihs_category+ "\t" +
+					sub_category+ "\t" +
 					manufacturer
 					);
 			
